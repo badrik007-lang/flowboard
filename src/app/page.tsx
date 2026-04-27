@@ -187,6 +187,31 @@ export default function FlowBoard() {
   const [showNotifications, setShowNotifications] = useState(false);
   const [showNewProject, setShowNewProject] = useState(false);
 
+  useEffect(() => {
+    const init = async () => {
+      const { supabase } = await import('@/lib/supabase')
+      
+      // Check auth
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user) {
+        window.location.href = '/auth'
+        return
+      }
+  
+      // Listen for auth changes
+      supabase.auth.onAuthStateChange((event: unknown, session: unknown) => {
+        if (!session) window.location.href = '/auth'
+      })
+    }
+    init()
+  }, [])
+
+  const handleLogout = async () => {
+    const { supabase } = await import('@/lib/supabase')
+    await supabase.auth.signOut()
+    window.location.href = '/auth'
+  }
+
   const projectTasks = tasks.filter((t) => t.projectId === activeProject);
   const filteredTasks = projectTasks.filter((t) => {
     const matchSearch = !searchQuery || t.title.toLowerCase().includes(searchQuery.toLowerCase());
@@ -306,7 +331,7 @@ export default function FlowBoard() {
                 <div style={{ fontSize: 12, fontWeight: 600, color: "#e2e8f0", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>Badri Koushik</div>
                 <div style={{ fontSize: 10, color: "#4b5563" }}>Admin</div>
               </div>
-              <button style={{ background: "none", border: "none", color: "#4b5563", cursor: "pointer", padding: 2 }}>
+              <button onClick={handleLogout} style={{ background: "none", border: "none", color: "#4b5563", cursor: "pointer", padding: 2 }}>
                 <Icon d={Icons.logout} size={14} />
               </button>
             </>
