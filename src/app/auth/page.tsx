@@ -29,15 +29,14 @@ export default function AuthPage() {
         if (error) throw error;
         if (data.user) {
           // Create workspace for new user
-          const { createWorkspace } = await import("@/lib/supabase");
-          await createWorkspace(`${fullName}'s Workspace`, data.user.id);
+          // workspace creation skipped for now
           setSuccess("Account created! Redirecting…");
-          setTimeout(() => router.push("/dashboard"), 1500);
+          setTimeout(() => router.push("/"), 1500);
         }
       } else {
         const { error } = await supabase.auth.signInWithPassword({ email, password });
         if (error) throw error;
-        router.push("/dashboard");
+        router.push("/");
       }
     } catch (err: any) {
       setError(err.message);
