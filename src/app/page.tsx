@@ -166,6 +166,13 @@ const StatusDot = ({ status, size = 8 }: { status: Status; size?: number }) => (
 
 // ─── MAIN APP ────────────────────────────────────────────────────────────────
 export default function FlowBoard() {
+  const [currentUser, setCurrentUser] = useState({
+    id: '',
+    name: 'Loading...',
+    email: '',
+    initials: '...',
+    color: '#6366f1'
+  })
   const [projects, setProjects] = useState<Project[]>(initProjects);
   const [tasks, setTasks] = useState<Task[]>(initTasks);
   const [activeProject, setActiveProject] = useState<Project["id"]>("p1");
@@ -188,16 +195,35 @@ export default function FlowBoard() {
   const [showNewProject, setShowNewProject] = useState(false);
 
   useEffect(() => {
-    const init = async () => {
+    const loadUser = async () => {
       const { supabase } = await import('@/lib/supabase')
       
-      // Check auth
       const { data: { user } } = await supabase.auth.getUser()
       if (!user) {
         window.location.href = '/auth'
         return
       }
-  
+
+      setCurrentUser({
+        id: user.id,
+        name: user.user_metadata?.full_name || user.email?.split('@')[0] || 'User',
+        email: user.email || '',
+        initials: (user.user_metadata?.full_name || user.email || 'U')
+          .split(' ')
+          .map((n: string) => n[0])
+          .join('')
+          .toUpperCase()
+          .slice(0, 2),
+        color: '#6366f1'
+      })
+    }
+    loadUser()
+  }, [])
+
+  useEffect(() => {
+    const init = async () => {
+      const { supabase } = await import('@/lib/supabase')
+
       // Listen for auth changes
       supabase.auth.onAuthStateChange((event: unknown, session: unknown) => {
         if (!session) window.location.href = '/auth'
@@ -324,12 +350,14 @@ export default function FlowBoard() {
 
         {/* Bottom user */}
         <div style={{ padding: "10px 12px", borderTop: "1px solid #1a1a2a", display: "flex", alignItems: "center", gap: 8 }}>
-          <Avatar userId="u1" size={28} />
+          <div style={{ width: 28, height: 28, borderRadius: "50%", background: currentUser.color, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 28 * 0.38, fontWeight: 700, color: "#fff", flexShrink: 0, fontFamily: "inherit" }}>
+            {currentUser.initials}
+          </div>
           {!sidebarCollapsed && (
             <>
               <div style={{ flex: 1, minWidth: 0 }}>
-                <div style={{ fontSize: 12, fontWeight: 600, color: "#e2e8f0", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>Badri Koushik</div>
-                <div style={{ fontSize: 10, color: "#4b5563" }}>Admin</div>
+                <div style={{ fontSize: 12, fontWeight: 600, color: "#e2e8f0", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{currentUser.name}</div>
+                <div style={{ fontSize: 10, color: "#4b5563", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{currentUser.email}</div>
               </div>
               <button onClick={handleLogout} style={{ background: "none", border: "none", color: "#4b5563", cursor: "pointer", padding: 2 }}>
                 <Icon d={Icons.logout} size={14} />
