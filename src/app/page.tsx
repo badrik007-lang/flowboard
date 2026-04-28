@@ -215,7 +215,7 @@ export default function FlowBoard() {
       supabase
         .from('tasks')
         .select('*')
-        .eq('project_id', activeProject, currentUser])
+        .eq('project_id', activeProject))
         .order('created_at', { ascending: false })
         .then(({ data }) => {
           if (data && data.length > 0) {
