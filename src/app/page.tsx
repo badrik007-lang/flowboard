@@ -209,7 +209,39 @@ export default function FlowBoard() {
     })
   }, [])
 
-
+  useEffect(() => {
+    if (!activeProject) return
+    import('@/lib/supabase').then(({ supabase }) => {
+      supabase
+        .from('tasks')
+        .select('*')
+        .eq('project_id', activeProject)
+        .order('created_at', { ascending: false })
+        .then(({ data }) => {
+          if (data && data.length > 0) {
+            setTasks(prev => {
+              const realIds = data.map((t: any) => t.id)
+              const mockTasks = prev.filter(t => !realIds.includes(t.id) && t.projectId !== activeProject)
+              const realTasks = data.map((t: any) => ({
+                id: t.id,
+                projectId: t.project_id,
+                title: t.title,
+                description: t.description,
+                status: t.status,
+                priority: t.priority,
+                assignee: t.assignee_id,
+                dueDate: t.due_date,
+                labels: [],
+                comments: [],
+                activity: [],
+                createdAt: t.created_at,
+              }))
+              return [...mockTasks, ...realTasks]
+            })
+          }
+        })
+    })
+  }, [activeProject])
 
   const handleLogout = async () => {
     const { supabase } = await import('@/lib/supabase')
