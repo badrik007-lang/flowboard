@@ -108,10 +108,10 @@ const LABELS = [
 ] satisfies Label[];
 
 const initProjects = [
-  { id: "p1", name: "VulnRadar", color: "#6366f1", description: "Cybersecurity vulnerability management platform", icon: "🛡️" },
-  { id: "p2", name: "Auditra", color: "#10b981", description: "GRC audit management tool", icon: "📋" },
-  { id: "p3", name: "Sentra", color: "#f59e0b", description: "Security posture management", icon: "🔒" },
-] satisfies Project[];
+  { id: "22222222-2222-2222-2222-222222222222", name: "VulnRadar", color: "#6366f1", description: "Cybersecurity vulnerability management", icon: "🛡️" },
+  { id: "33333333-3333-3333-3333-333333333333", name: "Auditra", color: "#10b981", description: "GRC audit management tool", icon: "📋" },
+  { id: "44444444-4444-4444-4444-444444444444", name: "Sentra", color: "#f59e0b", description: "Security posture management", icon: "🔒" },
+];
 
 const initTasks = [
   { id: "t1", projectId: "p1", title: "Design vulnerability dashboard", description: "Create the main dashboard showing all active vulnerabilities with severity breakdown and trend charts.", status: "Done", priority: "high", assignee: "u1", dueDate: "2025-05-10", labels: ["l3", "l5"], comments: [{ id: "c1", userId: "u2", text: "Looks great, approved!", time: "2 days ago" }], activity: ["Created by Badri Koushik · 5 days ago", "Status changed to Done · 2 days ago"], createdAt: "2025-05-01" },
@@ -175,7 +175,7 @@ export default function FlowBoard() {
   })
   const [projects, setProjects] = useState<Project[]>(initProjects);
   const [tasks, setTasks] = useState<Task[]>(initTasks);
-  const [activeProject, setActiveProject] = useState<Project["id"]>("p1");
+  const [activeProject, setActiveProject] = useState<Project["id"]>("22222222-2222-2222-2222-222222222222");
   const [view, setView] = useState<ViewKey>("board"); // board | list | roadmap | sprints
   const [selectedTask, setSelectedTask] = useState<Task["id"] | null>(null);
   const [showNewTask, setShowNewTask] = useState(false);
@@ -215,7 +215,7 @@ export default function FlowBoard() {
       supabase
         .from('tasks')
         .select('*')
-        .eq('project_id', activeProject)
+        .eq('project_id', activeProject, currentUser])
         .order('created_at', { ascending: false })
         .then(({ data }) => {
           if (data && data.length > 0) {
