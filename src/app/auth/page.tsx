@@ -5,7 +5,7 @@ import { supabase } from "@/lib/supabase";
 import { useRouter } from "next/navigation";
 
 export default function AuthPage() {
-  const [mode, setMode] = useState<"login" | "signup">("login");
+  const [mode, setMode] = useState<"login" | "signup" | "forgot">("login");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [fullName, setFullName] = useState("");
@@ -45,6 +45,23 @@ export default function AuthPage() {
     }
   };
 
+  const handleForgot = async () => {
+    setLoading(true);
+    setError(null);
+    setSuccess(null);
+
+    try {
+      await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: 'https://flowboard-seven-fawn.vercel.app/auth/reset'
+      })
+      setSuccess("Check your email for a reset link");
+    } catch (err: any) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <div style={{ minHeight: "100vh", background: "#0a0a0f", display: "flex", alignItems: "center", justifyContent: "center", fontFamily: "'DM Sans', sans-serif" }}>
       <style>{`@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&display=swap'); * { box-sizing: border-box; margin: 0; padding: 0; }`}</style>
@@ -56,10 +73,10 @@ export default function AuthPage() {
         </div>
 
         <h1 style={{ fontSize: 20, fontWeight: 700, color: "#f1f5f9", marginBottom: 4 }}>
-          {mode === "login" ? "Welcome back" : "Create your account"}
+          {mode === "login" ? "Welcome back" : mode === "signup" ? "Create your account" : "Reset your password"}
         </h1>
         <p style={{ fontSize: 13, color: "#6b7280", marginBottom: 24 }}>
-          {mode === "login" ? "Sign in to your workspace" : "Start managing your team's work"}
+          {mode === "login" ? "Sign in to your workspace" : mode === "signup" ? "Start managing your team's work" : "We'll email you a reset link"}
         </p>
 
         {mode === "signup" && (
@@ -89,19 +106,31 @@ export default function AuthPage() {
           />
         </div>
 
-        <div style={{ marginBottom: 20 }}>
-          <label style={{ fontSize: 12, color: "#9ca3af", fontWeight: 600, display: "block", marginBottom: 6 }}>Password</label>
-          <input
-            type="password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            placeholder="••••••••"
-            onKeyDown={(e) => e.key === "Enter" && handleSubmit()}
-            style={{ width: "100%", background: "#111118", border: "1px solid #1e1e2e", borderRadius: 8, padding: "10px 14px", color: "#f1f5f9", fontSize: 14, outline: "none" }}
-            onFocus={(e) => (e.target.style.borderColor = "#6366f1")}
-            onBlur={(e) => (e.target.style.borderColor = "#1e1e2e")}
-          />
-        </div>
+        {mode !== "forgot" && (
+          <>
+            <div style={{ marginBottom: 12 }}>
+              <label style={{ fontSize: 12, color: "#9ca3af", fontWeight: 600, display: "block", marginBottom: 6 }}>Password</label>
+              <input
+                type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                placeholder="••••••••"
+                onKeyDown={(e) => e.key === "Enter" && handleSubmit()}
+                style={{ width: "100%", background: "#111118", border: "1px solid #1e1e2e", borderRadius: 8, padding: "10px 14px", color: "#f1f5f9", fontSize: 14, outline: "none" }}
+                onFocus={(e) => (e.target.style.borderColor = "#6366f1")}
+                onBlur={(e) => (e.target.style.borderColor = "#1e1e2e")}
+              />
+            </div>
+            {mode === "login" && (
+              <div style={{ marginBottom: 20, textAlign: "right" }}>
+                <span onClick={() => setMode("forgot")} style={{ color: "#6366f1", cursor: "pointer", fontSize: 12, fontWeight: 600 }}>
+                  Forgot password?
+                </span>
+              </div>
+            )}
+            {mode !== "login" && <div style={{ marginBottom: 20 }} />}
+          </>
+        )}
 
         {error && (
           <div style={{ padding: "10px 14px", background: "#ef444415", border: "1px solid #ef444430", borderRadius: 8, color: "#ef4444", fontSize: 13, marginBottom: 16 }}>
@@ -116,19 +145,27 @@ export default function AuthPage() {
         )}
 
         <button
-          onClick={handleSubmit}
+          onClick={mode === "forgot" ? handleForgot : handleSubmit}
           disabled={loading}
           style={{ width: "100%", padding: "11px", background: "#6366f1", border: "none", borderRadius: 8, color: "#fff", fontSize: 14, fontWeight: 700, cursor: loading ? "not-allowed" : "pointer", opacity: loading ? 0.7 : 1, letterSpacing: "-0.01em" }}
         >
-          {loading ? "Please wait…" : mode === "login" ? "Sign In" : "Create Account"}
+          {loading ? "Please wait…" : mode === "login" ? "Sign In" : mode === "signup" ? "Create Account" : "Send Reset Link"}
         </button>
 
-        <p style={{ textAlign: "center", fontSize: 13, color: "#6b7280", marginTop: 20 }}>
-          {mode === "login" ? "Don't have an account?" : "Already have an account?"}{" "}
-          <span onClick={() => setMode(mode === "login" ? "signup" : "login")} style={{ color: "#6366f1", cursor: "pointer", fontWeight: 600 }}>
-            {mode === "login" ? "Sign up" : "Sign in"}
-          </span>
-        </p>
+        {mode === "forgot" ? (
+          <p style={{ textAlign: "center", fontSize: 13, color: "#6b7280", marginTop: 20 }}>
+            <span onClick={() => setMode("login")} style={{ color: "#6366f1", cursor: "pointer", fontWeight: 600 }}>
+              Back to login
+            </span>
+          </p>
+        ) : (
+          <p style={{ textAlign: "center", fontSize: 13, color: "#6b7280", marginTop: 20 }}>
+            {mode === "login" ? "Don't have an account?" : "Already have an account?"}{" "}
+            <span onClick={() => setMode(mode === "login" ? "signup" : "login")} style={{ color: "#6366f1", cursor: "pointer", fontWeight: 600 }}>
+              {mode === "login" ? "Sign up" : "Sign in"}
+            </span>
+          </p>
+        )}
       </div>
     </div>
   );
