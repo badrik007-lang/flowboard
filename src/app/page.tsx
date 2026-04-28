@@ -196,17 +196,7 @@ export default function FlowBoard() {
 
 
 
-  useEffect(() => {
-    const init = async () => {
-      const { supabase } = await import('@/lib/supabase')
 
-      // Listen for auth changes
-      supabase.auth.onAuthStateChange((event: unknown, session: unknown) => {
-        if (!session) window.location.href = '/auth'
-      })
-    }
-    init()
-  }, [])
 
   const handleLogout = async () => {
     const { supabase } = await import('@/lib/supabase')
