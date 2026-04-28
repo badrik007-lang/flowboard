@@ -194,7 +194,20 @@ export default function FlowBoard() {
   const [showNotifications, setShowNotifications] = useState(false);
   const [showNewProject, setShowNewProject] = useState(false);
 
-
+  useEffect(() => {
+    import('@/lib/supabase').then(({ supabase }) => {
+      supabase.auth.getUser().then(({ data: { user } }) => {
+        if (!user) window.location.href = '/auth'
+        else setCurrentUser({
+          id: user.id,
+          name: user.user_metadata?.full_name || user.email?.split('@')[0] || 'User',
+          email: user.email || '',
+          initials: (user.user_metadata?.full_name || user.email || 'U').split(' ').map((n: string) => n[0]).join('').toUpperCase().slice(0, 2),
+          color: '#6366f1'
+        })
+      })
+    })
+  }, [])
 
 
 
