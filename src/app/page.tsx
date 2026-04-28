@@ -231,10 +231,54 @@ export default function FlowBoard() {
     setTasks((prev) => prev.map((t) => t.id === taskId ? { ...t, ...updates } : t));
   }, []);
 
-  const createTask = useCallback((taskData: CreateTaskInput) => {
-    const newTask = { id: uid(), projectId: activeProject, comments: [], activity: [`Created by Badri Koushik · just now`], createdAt: new Date().toISOString().split("T")[0], ...taskData };
-    setTasks((prev) => [...prev, newTask]);
-  }, [activeProject]);
+  const createTask = useCallback(async (taskData: any) => {
+    const { supabase } = await import('@/lib/supabase')
+    
+    // Save to Supabase
+    const { data, error } = await supabase.from('tasks').insert({
+      title: taskData.title,
+      description: taskData.description || null,
+      status: taskData.status,
+      priority: taskData.priority,
+      assignee_id: taskData.assignee || null,
+      due_date: taskData.dueDate || null,
+      project_id: activeProject,
+      created_by: currentUser?.id || null,
+    }).select().single()
+  
+    if (error) {
+      // Fallback to local if Supabase fails
+      const newTask = { id: uid(), projectId: activeProject, comments: [], activity: [`Created · just now`], createdAt: new Date().toISOString().split("T")[0], ...taskData }
+      setTasks(prev => [...prev, newTask])
+      return
+    }
+  
+    // Add locally with Supabase id
+    const newTask = {
+      id: data.id,
+      projectId: data.project_id,
+      title: data.title,
+      description: data.description,
+      status: data.status,
+      priority: data.priority,
+      assignee: data.assignee_id,
+      dueDate: data.due_date,
+      labels: taskData.labels || [],
+      comments: [],
+      activity: [`Created · just now`],
+      createdAt: data.created_at,
+    }
+    setTasks(prev => [...prev, newTask])
+  
+    // Notify assignee
+    if (data.assignee_id && data.assignee_id !== currentUser?.id) {
+      await supabase.from('notifications').insert({
+        user_id: data.assignee_id,
+        title: 'New task assigned to you',
+        body: data.title,
+      })
+    }
+  }, [activeProject, currentUser])
 
   const deleteTask = useCallback((taskId: Task["id"]) => {
     setTasks((prev) => prev.filter((t) => t.id !== taskId));
