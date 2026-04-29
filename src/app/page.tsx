@@ -91,12 +91,7 @@ type ViewKey = "board" | "list" | "roadmap" | "sprints";
 type NavKey = "projects" | "dashboard" | "settings";
 type CreateTaskInput = Omit<Task, "id" | "projectId" | "comments" | "activity" | "createdAt">;
 
-const MEMBERS = [
-  { id: "u1", name: "Badri Koushik", initials: "BK", color: "#6366f1" },
-  { id: "u2", name: "Priya R", initials: "PR", color: "#ec4899" },
-  { id: "u3", name: "Karthik M", initials: "KM", color: "#10b981" },
-  { id: "u4", name: "Divya S", initials: "DS", color: "#f59e0b" },
-] satisfies Member[];
+
 
 const LABELS = [
   { id: "l1", name: "Bug", color: "#ef4444" },
@@ -178,7 +173,7 @@ export default function FlowBoard() {
   const [activeProject, setActiveProject] = useState<Project["id"]>("22222222-2222-2222-2222-222222222222");
   const [view, setView] = useState<ViewKey>("board"); // board | list | roadmap | sprints
   const [selectedTask, setSelectedTask] = useState<Task["id"] | null>(null);
-  const [showNewTask, setShowNewTask] = useState(false);
+  const [showNewTask, setShowNewTask] = useState(false); const [workspaceMembers, setWorkspaceMembers] = useState<any[]>([])
   const [newTaskStatus, setNewTaskStatus] = useState<Status>("Todo");
   const [searchQuery, setSearchQuery] = useState("");
   const [filterPriority, setFilterPriority] = useState<"all" | Priority>("all");
@@ -198,7 +193,18 @@ export default function FlowBoard() {
     import('@/lib/supabase').then(({ supabase }) => {
       supabase.auth.getUser().then(({ data: { user } }) => {
         if (!user) window.location.href = '/auth'
-        else setCurrentUser({
+        else setCurrentUser({supabase
+          .from('workspace_members')
+          .select('*, profile:profiles(*)')
+          .eq('workspace_id', '11111111-1111-1111-1111-111111111111')
+          .then(({ data: members }) => {
+            if (members) setWorkspaceMembers(members.map((m: any) => ({
+              id: m.user_id,
+              name: m.profile?.full_name || 'Unknown',
+              initials: (m.profile?.full_name || 'U').split(' ').map((n: string) => n[0]).join('').toUpperCase().slice(0, 2),
+              color: m.profile?.color || '#6366f1',
+            })))
+          })
           id: user.id,
           name: user.user_metadata?.full_name || user.email?.split('@')[0] || 'User',
           email: user.email || '',
