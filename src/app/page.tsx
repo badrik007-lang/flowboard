@@ -193,24 +193,27 @@ export default function FlowBoard() {
     import('@/lib/supabase').then(({ supabase }) => {
       supabase.auth.getUser().then(({ data: { user } }) => {
         if (!user) window.location.href = '/auth'
-        else setCurrentUser({supabase
-          .from('workspace_members')
-          .select('*, profile:profiles(*)')
-          .eq('workspace_id', '11111111-1111-1111-1111-111111111111')
-          .then(({ data: members }) => {
-            if (members) setWorkspaceMembers(members.map((m: any) => ({
-              id: m.user_id,
-              name: m.profile?.full_name || 'Unknown',
-              initials: (m.profile?.full_name || 'U').split(' ').map((n: string) => n[0]).join('').toUpperCase().slice(0, 2),
-              color: m.profile?.color || '#6366f1',
-            })))
+        else {
+          setCurrentUser({
+            id: user.id,
+            name: user.user_metadata?.full_name || user.email?.split('@')[0] || 'User',
+            email: user.email || '',
+            initials: (user.user_metadata?.full_name || user.email || 'U').split(' ').map((n: string) => n[0]).join('').toUpperCase().slice(0, 2),
+            color: '#6366f1'
           })
-          id: user.id,
-          name: user.user_metadata?.full_name || user.email?.split('@')[0] || 'User',
-          email: user.email || '',
-          initials: (user.user_metadata?.full_name || user.email || 'U').split(' ').map((n: string) => n[0]).join('').toUpperCase().slice(0, 2),
-          color: '#6366f1'
-        })
+          supabase
+            .from('workspace_members')
+            .select('*, profile:profiles(*)')
+            .eq('workspace_id', '11111111-1111-1111-1111-111111111111')
+            .then(({ data: members }) => {
+              if (members) setWorkspaceMembers(members.map((m: any) => ({
+                id: m.user_id,
+                name: m.profile?.full_name || 'Unknown',
+                initials: (m.profile?.full_name || 'U').split(' ').map((n: string) => n[0]).join('').toUpperCase().slice(0, 2),
+                color: m.profile?.color || '#6366f1',
+              })))
+            })
+        }
       })
     })
   }, [])
