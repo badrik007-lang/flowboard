@@ -69,7 +69,7 @@ const STATUS_COLORS = {
 type Member = { id: string; name: string; initials: string; color: string };
 type Label = { id: string; name: string; color: string };
 type Project = { id: string; name: string; color: string; description: string; icon: string };
-type TaskComment = { id: string; userId: Member["id"]; text: string; time: string };
+type TaskComment = { id: string; userId: string; text: string; time: string };
 type Task = {
   id: string;
   projectId: Project["id"];
@@ -77,7 +77,7 @@ type Task = {
   description: string;
   status: Status;
   priority: Priority;
-  assignee: Member["id"] | "";
+  assignee: string | "";
   dueDate: string;
   labels: Label["id"][];
   comments: TaskComment[];
@@ -121,7 +121,7 @@ const initTasks = [
 ] satisfies Task[];
 
 // ─── UTILS ───────────────────────────────────────────────────────────────────
-const Avatar = ({ userId, size = 24 }: { userId: string; size?: number }) => {
+
 const getLabel = (id: Label["id"]) => LABELS.find((l) => l.id === id);
 const uid = () => Math.random().toString(36).slice(2, 9);
 const formatDate = (d: string | null | undefined) => {
@@ -132,7 +132,7 @@ const formatDate = (d: string | null | undefined) => {
 const isOverdue = (d: string | null | undefined) => Boolean(d && new Date(d) < new Date());
 
 // ─── AVATAR ──────────────────────────────────────────────────────────────────
-const Avatar = ({ userId, size = 24 }: { userId: Member["id"] | ""; size?: number }) => {
+const Avatar = ({ userId, size = 24 }: { userId: string | ""; size?: number }) => {
   const m = getMember(userId);
   if (!m) return null;
   return (
@@ -177,7 +177,7 @@ export default function FlowBoard() {
   const [newTaskStatus, setNewTaskStatus] = useState<Status>("Todo");
   const [searchQuery, setSearchQuery] = useState("");
   const [filterPriority, setFilterPriority] = useState<"all" | Priority>("all");
-  const [filterAssignee, setFilterAssignee] = useState<"all" | Member["id"]>("all");
+  const [filterAssignee, setFilterAssignee] = useState<"all" | string>("all");
   const [activeNav, setActiveNav] = useState<NavKey>("projects"); // projects | dashboard | settings
   const [dragState, setDragState] = useState<DragState | null>(null);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
@@ -465,7 +465,7 @@ export default function FlowBoard() {
                 <option value="all">Priority</option>
                 {Object.entries(PRIORITIES).map(([k, v]) => <option key={k} value={k}>{v.label}</option>)}
               </select>
-              <select value={filterAssignee} onChange={(e) => setFilterAssignee(e.target.value as "all" | Member["id"])} style={{ background: "#111118", border: "1px solid #1e1e2e", borderRadius: 6, padding: "4px 8px", color: filterAssignee !== "all" ? "#6366f1" : "#6b7280", fontSize: 12, cursor: "pointer", outline: "none" }}>
+              <select value={filterAssignee} onChange={(e) => setFilterAssignee(e.target.value as "all" | string)} style={{ background: "#111118", border: "1px solid #1e1e2e", borderRadius: 6, padding: "4px 8px", color: filterAssignee !== "all" ? "#6366f1" : "#6b7280", fontSize: 12, cursor: "pointer", outline: "none" }}>
                 <option value="all">Assignee</option>
                 {workspaceMembers.map((m) => <option key={m.id} value={m.id}>{m.name}</option>)}
               </select>
