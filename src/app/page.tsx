@@ -121,7 +121,7 @@ const initTasks = [
 ] satisfies Task[];
 
 // ─── UTILS ───────────────────────────────────────────────────────────────────
-const getMember = (id: Member["id"] | "") => MEMBERS.find((m) => m.id === id);
+const Avatar = ({ userId, size = 24 }: { userId: string; size?: number }) => {
 const getLabel = (id: Label["id"]) => LABELS.find((l) => l.id === id);
 const uid = () => Math.random().toString(36).slice(2, 9);
 const formatDate = (d: string | null | undefined) => {
@@ -205,8 +205,8 @@ export default function FlowBoard() {
             .from('workspace_members')
             .select('*, profile:profiles(*)')
             .eq('workspace_id', '11111111-1111-1111-1111-111111111111')
-            .then(({ data: members }) => {
-              if (members) setWorkspaceMembers(members.map((m: any) => ({
+            .then(({ data: workspaceMembers }) => {
+              if (workspaceMembers) setWorkspaceMembers(workspaceMembers.map((m: any) => ({
                 id: m.user_id,
                 name: m.profile?.full_name || 'Unknown',
                 initials: (m.profile?.full_name || 'U').split(' ').map((n: string) => n[0]).join('').toUpperCase().slice(0, 2),
@@ -467,7 +467,7 @@ export default function FlowBoard() {
               </select>
               <select value={filterAssignee} onChange={(e) => setFilterAssignee(e.target.value as "all" | Member["id"])} style={{ background: "#111118", border: "1px solid #1e1e2e", borderRadius: 6, padding: "4px 8px", color: filterAssignee !== "all" ? "#6366f1" : "#6b7280", fontSize: 12, cursor: "pointer", outline: "none" }}>
                 <option value="all">Assignee</option>
-                {MEMBERS.map((m) => <option key={m.id} value={m.id}>{m.name}</option>)}
+                {workspaceMembers.map((m) => <option key={m.id} value={m.id}>{m.name}</option>)}
               </select>
             </>
           )}
@@ -508,7 +508,7 @@ export default function FlowBoard() {
         {/* Content */}
         <div style={{ flex: 1, overflow: "auto", position: "relative" }}>
           {activeNav === "dashboard" ? (
-            <DashboardView tasks={tasks} projects={projects} members={MEMBERS} onTaskClick={setSelectedTask} />
+            <DashboardView tasks={tasks} projects={projects} workspaceMembers={workspaceMembers} onTaskClick={setSelectedTask} />
           ) : view === "board" ? (
             <BoardView tasks={filteredTasks} onTaskClick={setSelectedTask} onDragStart={handleDragStart} onDragOver={handleDragOver} onDrop={handleDrop} dragState={dragState} onAddTask={(status) => { setNewTaskStatus(status); setShowNewTask(true); }} />
           ) : view === "list" ? (
@@ -523,12 +523,12 @@ export default function FlowBoard() {
 
       {/* ── TASK DETAIL PANEL ── */}
       {selectedTask && (
-        <TaskDetailPanel task={tasks.find((t) => t.id === selectedTask)} onClose={() => setSelectedTask(null)} onUpdate={updateTask} onDelete={deleteTask} members={MEMBERS} labels={LABELS} />
+        <TaskDetailPanel task={tasks.find((t) => t.id === selectedTask)} onClose={() => setSelectedTask(null)} onUpdate={updateTask} onDelete={deleteTask} workspaceMembers={workspaceMembers} labels={LABELS} />
       )}
 
       {/* ── NEW TASK MODAL ── */}
       {showNewTask && (
-        <NewTaskModal initialStatus={newTaskStatus} onClose={() => setShowNewTask(false)} onCreate={createTask} members={MEMBERS} labels={LABELS} />
+        <NewTaskModal initialStatus={newTaskStatus} onClose={() => setShowNewTask(false)} onCreate={createTask} workspaceMembers={workspaceMembers} labels={LABELS} />
       )}
 
       {/* ── NEW PROJECT MODAL ── */}
@@ -794,12 +794,12 @@ function RoadmapView({ tasks, onTaskClick }: { tasks: Task[]; onTaskClick: (task
 function DashboardView({
   tasks,
   projects,
-  members,
+  workspaceMembers,
   onTaskClick,
 }: {
   tasks: Task[];
   projects: Project[];
-  members: Member[];
+  workspaceMembers: Member[];
   onTaskClick: (taskId: Task["id"]) => void;
 }) {
   const total = tasks.length;
@@ -860,7 +860,7 @@ function DashboardView({
         {/* Team workload */}
         <div className="fade-in stagger-2" style={{ background: "#111118", border: "1px solid #1e1e2e", borderRadius: 10, padding: 18 }}>
           <div style={{ fontSize: 13, fontWeight: 600, color: "#e2e8f0", marginBottom: 14 }}>Team Workload</div>
-          {members.map((m) => {
+          {workspaceMembers.map((m) => {
             const assigned = tasks.filter(t => t.assignee === m.id);
             const inProg = assigned.filter(t => t.status === "In Progress").length;
             return (
@@ -905,14 +905,14 @@ function TaskDetailPanel({
   onClose,
   onUpdate,
   onDelete,
-  members,
+  workspaceMembers,
   labels,
 }: {
   task: Task | undefined;
   onClose: () => void;
   onUpdate: (taskId: Task["id"], updates: Partial<Task>) => void;
   onDelete: (taskId: Task["id"]) => void;
-  members: Member[];
+  workspaceMembers: Member[];
   labels: Label[];
 }) {
   const [comment, setComment] = useState("");
@@ -987,7 +987,7 @@ function TaskDetailPanel({
               <div style={{ fontSize: 10, color: "#4b5563", fontWeight: 600, letterSpacing: "0.06em", textTransform: "uppercase", marginBottom: 6 }}>Assignee</div>
               <select value={task.assignee || ""} onChange={(e) => onUpdate(task.id, { assignee: e.target.value as Task["assignee"] })} style={{ background: "transparent", border: "none", color: "#e2e8f0", fontSize: 13, fontWeight: 500, cursor: "pointer", outline: "none", width: "100%" }}>
                 <option value="" style={{ background: "#0d0d16" }}>Unassigned</option>
-                {members.map(m => <option key={m.id} value={m.id} style={{ background: "#0d0d16" }}>{m.name}</option>)}
+                {workspaceMembers.map(m => <option key={m.id} value={m.id} style={{ background: "#0d0d16" }}>{m.name}</option>)}
               </select>
             </div>
             {/* Due Date */}
@@ -1086,13 +1086,13 @@ function NewTaskModal({
   initialStatus,
   onClose,
   onCreate,
-  members,
+  workspaceMembers,
   labels,
 }: {
   initialStatus: Status;
   onClose: () => void;
   onCreate: (task: CreateTaskInput) => void;
-  members: Member[];
+  workspaceMembers: Member[];
   labels: Label[];
 }) {
   const [form, setForm] = useState<NewTaskForm>({ title: "", description: "", status: initialStatus, priority: "medium", assignee: "", dueDate: "", labels: [] });
@@ -1133,7 +1133,7 @@ function NewTaskModal({
               <div style={{ fontSize: 11, color: "#4b5563", fontWeight: 600, marginBottom: 5, letterSpacing: "0.05em", textTransform: "uppercase" }}>Assignee</div>
               <select value={form.assignee} onChange={(e) => set("assignee", e.target.value as Task["assignee"])} style={{ width: "100%", background: "#111118", border: "1px solid #1e1e2e", borderRadius: 6, padding: "7px 10px", color: "#e2e8f0", fontSize: 12, outline: "none" }}>
                 <option value="" style={{ background: "#0d0d16" }}>Unassigned</option>
-                {members.map(m => <option key={m.id} value={m.id} style={{ background: "#0d0d16" }}>{m.name}</option>)}
+                {workspaceMembers.map(m => <option key={m.id} value={m.id} style={{ background: "#0d0d16" }}>{m.name}</option>)}
               </select>
             </div>
           </div>
