@@ -175,7 +175,8 @@ export default function FlowBoard() {
   const [activeProject, setActiveProject] = useState<Project["id"]>("22222222-2222-2222-2222-222222222222");
   const [view, setView] = useState<ViewKey>("board"); // board | list | roadmap | sprints
   const [selectedTask, setSelectedTask] = useState<Task["id"] | null>(null);
-  const [showNewTask, setShowNewTask] = useState(false); const [workspaceMembers, setWorkspaceMembers] = useState<any[]>([]) const getMember = (id: string) => workspaceMembers.find((m) => m.id === id) ?? null;
+  const [showNewTask, setShowNewTask] = useState(false); 
+  const [workspaceMembers, setWorkspaceMembers] = useState<any[]>([]);
   _getMember = (id: string) => workspaceMembers.find((m) => m.id === id) ?? null;
   const [newTaskStatus, setNewTaskStatus] = useState<Status>("Todo");
   const [searchQuery, setSearchQuery] = useState("");
