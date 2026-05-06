@@ -125,7 +125,6 @@ const initTasks = [
 const getLabel = (id: Label["id"]) => LABELS.find((l) => l.id === id);
 let _workspaceMembers: Member[] = [];
 const getMember = (id: string) => _workspaceMembers.find((m) => m.id === id) ?? null;
-const getMember = (id: string) => _getMember(id);
 const uid = () => Math.random().toString(36).slice(2, 9);
 const formatDate = (d: string | null | undefined) => {
   if (!d) return null;
