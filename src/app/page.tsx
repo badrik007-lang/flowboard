@@ -123,7 +123,8 @@ const initTasks = [
 // ─── UTILS ───────────────────────────────────────────────────────────────────
 
 const getLabel = (id: Label["id"]) => LABELS.find((l) => l.id === id);
-let _getMember: (id: string) => Member | null = () => null;
+let _workspaceMembers: Member[] = [];
+const getMember = (id: string) => _workspaceMembers.find((m) => m.id === id) ?? null;
 const getMember = (id: string) => _getMember(id);
 const uid = () => Math.random().toString(36).slice(2, 9);
 const formatDate = (d: string | null | undefined) => {
@@ -177,7 +178,7 @@ export default function FlowBoard() {
   const [selectedTask, setSelectedTask] = useState<Task["id"] | null>(null);
   const [showNewTask, setShowNewTask] = useState(false); 
   const [workspaceMembers, setWorkspaceMembers] = useState<any[]>([]);
-  _getMember = (id: string) => workspaceMembers.find((m) => m.id === id) ?? null;
+  _workspaceMembers = workspaceMembers;
   const [newTaskStatus, setNewTaskStatus] = useState<Status>("Todo");
   const [searchQuery, setSearchQuery] = useState("");
   const [filterPriority, setFilterPriority] = useState<"all" | Priority>("all");
