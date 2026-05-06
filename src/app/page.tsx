@@ -134,7 +134,7 @@ const formatDate = (d: string | null | undefined) => {
 const isOverdue = (d: string | null | undefined) => Boolean(d && new Date(d) < new Date());
 
 // ─── AVATAR ──────────────────────────────────────────────────────────────────
-const Avatar = ({ userId, size = 24, getMember }: { userId: string | ""; size?: number; getMember: (id: string) => Member | null }) => {
+const Avatar = ({ userId, size = 24 }: { userId: string | ""; size?: number }) => {
   const m = getMember(userId);
   if (!m) return null;
   return (
