@@ -194,31 +194,39 @@ export default function FlowBoard() {
   const [showNewProject, setShowNewProject] = useState(false);
 
   useEffect(() => {
-    import('@/lib/supabase').then(({ supabase }) => {
-      supabase.auth.getUser().then(({ data: { user } }) => {
-        if (!user) window.location.href = '/auth'
-        else {
-          setCurrentUser({
-            id: user.id,
-            name: user.user_metadata?.full_name || user.email?.split('@')[0] || 'User',
-            email: user.email || '',
-            initials: (user.user_metadata?.full_name || user.email || 'U').split(' ').map((n: string) => n[0]).join('').toUpperCase().slice(0, 2),
-            color: '#6366f1'
-          })
-          supabase
-            .from('workspace_members')
-            .select('*, profile:profiles(*)')
-            .eq('workspace_id', '11111111-1111-1111-1111-111111111111')
-            .then(({ data: workspaceMembers }) => {
-              if (workspaceMembers) setWorkspaceMembers(workspaceMembers.map((m: any) => ({
-                id: m.user_id,
-                name: m.profile?.full_name || 'Unknown',
-                initials: (m.profile?.full_name || 'U').split(' ').map((n: string) => n[0]).join('').toUpperCase().slice(0, 2),
-                color: m.profile?.color || '#6366f1',
-              })))
-            })
-        }
+    import('@/lib/supabase').then(async ({ supabase }) => {
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user) { window.location.href = '/auth'; return; }
+  
+      setCurrentUser({
+        id: user.id,
+        name: user.user_metadata?.full_name || user.email?.split('@')[0] || 'User',
+        email: user.email || '',
+        initials: (user.user_metadata?.full_name || user.email || 'U').split(' ').map((n: string) => n[0]).join('').toUpperCase().slice(0, 2),
+        color: '#6366f1'
       })
+  
+      const { data: members } = await supabase
+        .from('workspace_members')
+        .select('user_id')
+        .eq('workspace_id', '11111111-1111-1111-1111-111111111111')
+  
+      if (members) {
+        const userIds = members.map((m: any) => m.user_id)
+        const { data: profilesData } = await supabase
+          .from('profiles')
+          .select('*')
+          .in('id', userIds)
+  
+        if (profilesData) {
+          setWorkspaceMembers(profilesData.map((p: any) => ({
+            id: p.id,
+            name: p.full_name || 'Unknown',
+            initials: (p.full_name || 'U').split(' ').map((n: string) => n[0]).join('').toUpperCase().slice(0, 2),
+            color: p.color || '#6366f1',
+          })))
+        }
+      }
     })
   }, [])
 
