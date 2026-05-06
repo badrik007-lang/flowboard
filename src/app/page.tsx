@@ -123,6 +123,8 @@ const initTasks = [
 // ─── UTILS ───────────────────────────────────────────────────────────────────
 
 const getLabel = (id: Label["id"]) => LABELS.find((l) => l.id === id);
+let _getMember: (id: string) => Member | null = () => null;
+const getMember = (id: string) => _getMember(id);
 const uid = () => Math.random().toString(36).slice(2, 9);
 const formatDate = (d: string | null | undefined) => {
   if (!d) return null;
@@ -132,7 +134,7 @@ const formatDate = (d: string | null | undefined) => {
 const isOverdue = (d: string | null | undefined) => Boolean(d && new Date(d) < new Date());
 
 // ─── AVATAR ──────────────────────────────────────────────────────────────────
-const Avatar = ({ userId, size = 24 }: { userId: string | ""; size?: number }) => {
+const Avatar = ({ userId, size = 24, getMember }: { userId: string | ""; size?: number; getMember: (id: string) => Member | null }) => {
   const m = getMember(userId);
   if (!m) return null;
   return (
@@ -173,7 +175,8 @@ export default function FlowBoard() {
   const [activeProject, setActiveProject] = useState<Project["id"]>("22222222-2222-2222-2222-222222222222");
   const [view, setView] = useState<ViewKey>("board"); // board | list | roadmap | sprints
   const [selectedTask, setSelectedTask] = useState<Task["id"] | null>(null);
-  const [showNewTask, setShowNewTask] = useState(false); const [workspaceMembers, setWorkspaceMembers] = useState<any[]>([])
+  const [showNewTask, setShowNewTask] = useState(false); const [workspaceMembers, setWorkspaceMembers] = useState<any[]>([]) const getMember = (id: string) => workspaceMembers.find((m) => m.id === id) ?? null;
+  _getMember = (id: string) => workspaceMembers.find((m) => m.id === id) ?? null;
   const [newTaskStatus, setNewTaskStatus] = useState<Status>("Todo");
   const [searchQuery, setSearchQuery] = useState("");
   const [filterPriority, setFilterPriority] = useState<"all" | Priority>("all");
