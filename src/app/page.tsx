@@ -215,6 +215,25 @@ export default function FlowBoard() {
       }
     })
   }, [])
+  useEffect(() => {
+    import('@/lib/supabase').then(async ({ supabase }) => {
+      const { data } = await supabase
+        .from('projects')
+        .select('*')
+        .order('created_at', { ascending: true })
+      
+      if (data && data.length > 0) {
+        setProjects(data.map((p: any) => ({
+          id: p.id,
+          name: p.name,
+          color: p.color || '#6366f1',
+          description: p.description || '',
+          icon: p.icon || '📁',
+        })))
+        setActiveProject(data[0].id)
+      }
+    })
+  }, [])
 
   useEffect(() => {
     if (!activeProject) return
@@ -533,8 +552,21 @@ export default function FlowBoard() {
 
       {/* ── NEW PROJECT MODAL ── */}
       {showNewProject && (
-        <NewProjectModal onClose={() => setShowNewProject(false)} onCreate={(p) => { setProjects(prev => [...prev, { id: uid(), ...p }]); setShowNewProject(false); }} />
-      )}
+        <NewProjectModal onClose={() => setShowNewProject(false)} onCreate={async (p) => {
+          const { supabase } = await import('@/lib/supabase')
+          const { data } = await supabase.from('projects').insert({
+            name: p.name,
+            description: p.description,
+            color: p.color,
+            icon: p.icon,
+            workspace_id: '11111111-1111-1111-1111-111111111111',
+          }).select().single()
+          if (data) {
+            setProjects(prev => [...prev, { id: data.id, name: data.name, color: data.color, description: data.description, icon: data.icon }])
+            setActiveProject(data.id)
+          }
+          setShowNewProject(false)
+        }} />
     </div>
   );
 }
