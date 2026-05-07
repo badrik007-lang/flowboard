@@ -567,7 +567,7 @@ export default function FlowBoard() {
           }
           setShowNewProject(false)
         }} />
-    </div>
+      )}
   );
 }
 
