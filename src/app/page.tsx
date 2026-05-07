@@ -470,13 +470,28 @@ export default function FlowBoard() {
               </button>
             </div>
             {projects.map((p) => (
-              <button key={p.id} className="nav-item" onClick={() => { setActiveProject(p.id); setActiveNav("projects"); }} style={{ width: "100%", display: "flex", alignItems: "center", gap: 8, padding: "7px 8px", borderRadius: 6, background: activeProject === p.id && activeNav === "projects" ? "#16162a" : "transparent", border: "none", color: activeProject === p.id && activeNav === "projects" ? "#e2e8f0" : "#6b7280", cursor: "pointer", fontSize: 13, fontWeight: 500, whiteSpace: "nowrap", textAlign: "left" }}>
+              <div key={p.id} style={{ display: "flex", alignItems: "center", gap: 0, borderRadius: 6, background: activeProject === p.id && activeNav === "projects" ? "#16162a" : "transparent" }}
+              onMouseEnter={e => (e.currentTarget.querySelector('.del-btn') as HTMLElement)?.style && ((e.currentTarget.querySelector('.del-btn') as HTMLElement).style.opacity = '1')}
+              onMouseLeave={e => (e.currentTarget.querySelector('.del-btn') as HTMLElement)?.style && ((e.currentTarget.querySelector('.del-btn') as HTMLElement).style.opacity = '0')}>
+              <button className="nav-item" onClick={() => { setActiveProject(p.id); setActiveNav("projects"); }} style={{ flex: 1, display: "flex", alignItems: "center", gap: 8, padding: "7px 8px", borderRadius: 6, background: "transparent", border: "none", color: activeProject === p.id && activeNav === "projects" ? "#e2e8f0" : "#6b7280", cursor: "pointer", fontSize: 13, fontWeight: 500, whiteSpace: "nowrap", textAlign: "left" }}>
                 <div style={{ width: 20, height: 20, borderRadius: 4, background: p.color + "30", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 11, flexShrink: 0 }}>{p.icon}</div>
                 <span style={{ overflow: "hidden", textOverflow: "ellipsis" }}>{p.name}</span>
                 <span style={{ marginLeft: "auto", fontSize: 11, color: "#374151", background: "#1a1a2a", padding: "1px 6px", borderRadius: 10 }}>
-                {tasks.filter((t) => t.projectId === p.id).length}
+                  {tasks.filter((t) => t.projectId === p.id).length}
                 </span>
               </button>
+              <button className="del-btn" onClick={async () => {
+                if (!confirm(`Delete "${p.name}"?`)) return
+                const { supabase } = await import('@/lib/supabase')
+                await supabase.from('tasks').delete().eq('project_id', p.id)
+                await supabase.from('projects').delete().eq('id', p.id)
+                setProjects(prev => prev.filter(pr => pr.id !== p.id))
+                setTasks(prev => prev.filter(t => t.projectId !== p.id))
+                if (activeProject === p.id) setActiveProject("")
+              }} style={{ opacity: 0, background: "none", border: "none", color: "#ef4444", cursor: "pointer", padding: "4px 6px", transition: "opacity 0.15s", flexShrink: 0 }}>
+                <Icon d={Icons.trash} size={12} />
+              </button>
+            </div>
             ))}
           </div>
         )}
