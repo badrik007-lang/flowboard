@@ -171,11 +171,7 @@ export default function FlowBoard() {
   const [activeNav, setActiveNav] = useState<NavKey>("projects"); // projects | dashboard | settings
   const [dragState, setDragState] = useState<DragState | null>(null);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
-  const [notifications] = useState([
-    { id: "n1", text: "Priya moved 'Fix pagination bug' to In Review", time: "1h ago", read: false },
-    { id: "n2", text: "Karthik commented on 'CVE scoring API'", time: "3h ago", read: false },
-    { id: "n3", text: "New member Divya S joined the workspace", time: "1d ago", read: true },
-  ] satisfies Notification[]);
+  const [notifications, setNotifications] = useState<Notification[]>([]);
   const [showNotifications, setShowNotifications] = useState(false);
   const [showNewProject, setShowNewProject] = useState(false);
 
@@ -234,6 +230,27 @@ export default function FlowBoard() {
       }
     })
   }, [])
+
+  useEffect(() => {
+    if (!currentUser.id) return
+    import('@/lib/supabase').then(async ({ supabase }) => {
+      const { data } = await supabase
+        .from('notifications')
+        .select('*')
+        .eq('user_id', currentUser.id)
+        .order('created_at', { ascending: false })
+        .limit(10)
+  
+      if (data) {
+        setNotifications(data.map((n: any) => ({
+          id: n.id,
+          text: n.body,
+          time: new Date(n.created_at).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }),
+          read: n.read || false,
+        })))
+      }
+    })
+  }, [currentUser.id])
 
   useEffect(() => {
     if (!activeProject) return
