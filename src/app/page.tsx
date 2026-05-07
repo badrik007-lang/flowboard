@@ -102,23 +102,9 @@ const LABELS = [
   { id: "l6", name: "Urgent", color: "#f97316" },
 ] satisfies Label[];
 
-const initProjects = [
-  { id: "22222222-2222-2222-2222-222222222222", name: "VulnRadar", color: "#6366f1", description: "Cybersecurity vulnerability management", icon: "🛡️" },
-  { id: "33333333-3333-3333-3333-333333333333", name: "Auditra", color: "#10b981", description: "GRC audit management tool", icon: "📋" },
-  { id: "44444444-4444-4444-4444-444444444444", name: "Sentra", color: "#f59e0b", description: "Security posture management", icon: "🔒" },
-];
+const initProjects: Project[] = [];
 
-const initTasks = [
-  { id: "t1", projectId: "p1", title: "Design vulnerability dashboard", description: "Create the main dashboard showing all active vulnerabilities with severity breakdown and trend charts.", status: "Done", priority: "high", assignee: "u1", dueDate: "2025-05-10", labels: ["l3", "l5"], comments: [{ id: "c1", userId: "u2", text: "Looks great, approved!", time: "2 days ago" }], activity: ["Created by Badri Koushik · 5 days ago", "Status changed to Done · 2 days ago"], createdAt: "2025-05-01" },
-  { id: "t2", projectId: "p1", title: "Implement CVE scoring API", description: "Integrate NVD API for real-time CVE scores and automate severity classification.", status: "In Progress", priority: "critical", assignee: "u3", dueDate: "2025-05-15", labels: ["l4", "l6"], comments: [], activity: ["Created by Badri Koushik · 4 days ago", "Assigned to Karthik M · 3 days ago"], createdAt: "2025-05-02" },
-  { id: "t3", projectId: "p1", title: "User authentication flow", description: "Set up Supabase auth with email/password and magic link.", status: "Done", priority: "high", assignee: "u3", dueDate: "2025-05-08", labels: ["l4"], comments: [], activity: ["Created by Karthik M · 6 days ago"], createdAt: "2025-04-30" },
-  { id: "t4", projectId: "p1", title: "Export reports to PDF", description: "Allow users to export vulnerability reports as PDF with branding.", status: "Todo", priority: "medium", assignee: "u1", dueDate: "2025-05-20", labels: ["l2", "l5"], comments: [], activity: ["Created by Badri Koushik · 2 days ago"], createdAt: "2025-05-04" },
-  { id: "t5", projectId: "p1", title: "Fix pagination bug on asset list", description: "Page 2 onwards shows duplicate entries. Needs query fix.", status: "In Review", priority: "high", assignee: "u2", dueDate: "2025-05-12", labels: ["l1"], comments: [{ id: "c2", userId: "u3", text: "Reproduced the bug. It's in the offset logic.", time: "1 day ago" }], activity: ["Created by Priya R · 3 days ago", "Moved to In Review · 1 day ago"], createdAt: "2025-05-03" },
-  { id: "t6", projectId: "p1", title: "Onboarding walkthrough", description: "Create first-time user onboarding with guided tooltips.", status: "Backlog", priority: "low", assignee: "u4", dueDate: "2025-06-01", labels: ["l2", "l3"], comments: [], activity: ["Created by Divya S · 1 day ago"], createdAt: "2025-05-05" },
-  { id: "t7", projectId: "p2", title: "Node-based audit module", description: "Build the single-page node graph audit flow with drag connections.", status: "In Progress", priority: "critical", assignee: "u1", dueDate: "2025-05-18", labels: ["l2", "l3", "l5"], comments: [{ id: "c3", userId: "u2", text: "Internal auditors loved the demo!", time: "3 days ago" }], activity: ["Created by Badri Koushik · 7 days ago"], createdAt: "2025-04-28" },
-  { id: "t8", projectId: "p2", title: "Monochrome design system", description: "Document and implement the full monochrome component library.", status: "Done", priority: "high", assignee: "u1", dueDate: "2025-05-05", labels: ["l3"], comments: [], activity: ["Created by Badri Koushik · 10 days ago", "Status changed to Done · 4 days ago"], createdAt: "2025-04-25" },
-  { id: "t9", projectId: "p3", title: "Risk scoring engine", description: "Build automated risk scoring based on asset exposure and threat intelligence.", status: "Todo", priority: "critical", assignee: "u3", dueDate: "2025-05-25", labels: ["l4", "l2"], comments: [], activity: ["Created by Karthik M · 2 days ago"], createdAt: "2025-05-04" },
-] satisfies Task[];
+const initTasks: Task[] = [];
 
 // ─── UTILS ───────────────────────────────────────────────────────────────────
 
@@ -333,7 +319,9 @@ export default function FlowBoard() {
     }
   }, [activeProject, currentUser])
 
-  const deleteTask = useCallback((taskId: Task["id"]) => {
+  const deleteTask = useCallback(async (taskId: Task["id"]) => {
+    const { supabase } = await import('@/lib/supabase')
+    await supabase.from('tasks').delete().eq('id', taskId)
     setTasks((prev) => prev.filter((t) => t.id !== taskId));
     setSelectedTask(null);
   }, []);
