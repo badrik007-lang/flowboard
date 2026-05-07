@@ -285,8 +285,21 @@ export default function FlowBoard() {
 
   const currentProject = projects.find((p) => p.id === activeProject);
 
-  const updateTask = useCallback((taskId: Task["id"], updates: Partial<Task>) => {
+  const updateTask = useCallback(async (taskId: Task["id"], updates: Partial<Task>) => {
     setTasks((prev) => prev.map((t) => t.id === taskId ? { ...t, ...updates } : t));
+    
+    const dbUpdates: any = {}
+    if (updates.status) dbUpdates.status = updates.status
+    if (updates.priority) dbUpdates.priority = updates.priority
+    if (updates.assignee !== undefined) dbUpdates.assignee_id = updates.assignee
+    if (updates.dueDate !== undefined) dbUpdates.due_date = updates.dueDate
+    if (updates.title) dbUpdates.title = updates.title
+    if (updates.description !== undefined) dbUpdates.description = updates.description
+  
+    if (Object.keys(dbUpdates).length > 0) {
+      const { supabase } = await import('@/lib/supabase')
+      await supabase.from('tasks').update(dbUpdates).eq('id', taskId)
+    }
   }, []);
 
   const createTask = useCallback(async (taskData: any) => {
