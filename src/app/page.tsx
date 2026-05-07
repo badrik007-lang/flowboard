@@ -234,6 +234,7 @@ export default function FlowBoard() {
   useEffect(() => {
     if (!currentUser.id) return
     import('@/lib/supabase').then(async ({ supabase }) => {
+      // Initial fetch
       const { data } = await supabase
         .from('notifications')
         .select('*')
@@ -249,6 +250,25 @@ export default function FlowBoard() {
           read: n.read || false,
         })))
       }
+  
+      // Real-time subscription
+      supabase
+        .channel('notifications')
+        .on('postgres_changes', {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'notifications',
+          filter: `user_id=eq.${currentUser.id}`
+        }, (payload) => {
+          const n = payload.new as any
+          setNotifications(prev => [{
+            id: n.id,
+            text: n.body,
+            time: 'just now',
+            read: false,
+          }, ...prev])
+        })
+        .subscribe()
     })
   }, [currentUser.id])
 
